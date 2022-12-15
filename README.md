@@ -1,2 +1,2 @@
 # Ubuntu Helpers
-Ubuntu Linux OS helpers: scripts, docs.
+Ubuntu Linux OS helpers: scripts, docs
