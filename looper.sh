@@ -53,6 +53,56 @@ function printCenter {
   printf "$lineCommand"
   printLineOfChar $end ' '
 }
+function trimSpecialChars {
+  #echo Calling ${FUNCNAME[0]}...
+  local __result__=$1
+  local str=$2
+
+  # Remove UTF-8 BOM bytes
+  str=$(iconv --from-code=UTF-8 -c <<< $str)
+  # echo $str
+  # readarray -t arr <<< "$str"
+  # declare -p arr
+  # echo
+
+  # Escape new lines...
+  str="${str//$'\n'/\{nl\}}"
+  # echo $str
+  # echo
+
+  # Remove control chars...
+  #tr -d '\r'
+  str=$(tr -d [:cntrl:] <<< "$str")
+  # echo $str
+  # readarray -t arr <<< "$str"
+  # declare -p arr
+  # echo
+
+  # Index of alnum-substring
+  local s="${str%%[[:alnum:]]*}"
+  local index=${#s}
+  #echo $s : $index
+  str=${str:index} # make substring starting from first alnum-char
+  # readarray -t arr <<< $str
+  # declare -p arr
+  # echo
+
+  # Last index of alnum-substring
+  s="${str##*[[:alnum:]]}" # after last index
+  index=$((${#str} - ${#s}))
+  str=${str:0:index} # remove suffix with non-alnum chars
+
+  # Recover new lines...
+  str="${str//\{nl\}/$'\n'}"
+
+  # return $str
+  if [[ "$__result__" ]]
+  then
+    eval $__result__="'$str'"
+  else
+    echo "$str"
+  fi
+}
 
 start=$(date +%s)
 started=$(date +%T)
@@ -83,9 +133,10 @@ do
     if ((maxLen < length)); then
       maxLen=$length
     fi
+    #echo $i : $length : $line
   done
 
-  # Print to terminal window
+  # Header rendering
   clear
   #sharp='#'
   printLineOfChar $((maxLen+2)) '#'
@@ -100,9 +151,33 @@ do
   echo \# $lineStarted
   printf "#"; printLineOfChar $((maxLen+1)) '~'
   echo
+  # End of Header rendering
 
-  nordvpn status
-  
+  #nordvpn status
+  #eval "$command"
+  output=$(eval "$command")
+  # echo "$output"
+  # echo
+
+  trimSpecialChars content "$output"
+
+  # echo Encode whitespaces...
+  # content="${content// /\{whitespace\}}"
+  # echo $content
+  # echo
+
+  readarray -t lines <<< "$content"
+
+  for i in "${!lines[@]}"; do
+    line=${lines[$i]}
+    length=${#line}
+    # if ((maxLen < length)); then
+    #   maxLen=$length
+    # fi
+    echo $i : $length : $line
+  done
+
+  # Footer rendering
   echo
   printf "#"; printLineOfChar $((maxLen+1)) '~'
   echo \# $lineRunning
