@@ -2,10 +2,11 @@
 clear
 
 function timestamp {
-  local fname=${FUNCNAME[0]}
-  local seconds=$1
-  _timestamp_=""
+  #echo Calling ${FUNCNAME[0]}...
+  local __result__=$1
+  local seconds=$2
 
+  local -i sec min hrs
   ((sec=seconds%60, seconds/=60, min=seconds%60, hrs=seconds/60))
 
   local plural="s"
@@ -13,12 +14,19 @@ function timestamp {
     plural=""
   fi
 
+  local result=""
   if ((hrs == 0 && min == 0)); then
-    printf -v _timestamp_ "%d second%s" $sec $plural
+    printf -v result "%d second%s" $sec $plural
   elif (( hrs == 0 && min > 0)); then
-    printf -v _timestamp_ "%d:%02d" $min $sec
+    printf -v result "%d:%02d" $min $sec
   else
-    printf -v _timestamp_ "%d:%02d:%02d" $hrs $min $sec
+    printf -v result "%d:%02d:%02d" $hrs $min $sec
+  fi
+  # return $result
+  if [[ "$__result__" ]]; then
+    eval $__result__="'$result'"
+  else
+    echo "$result"
   fi
 }
 
@@ -38,10 +46,12 @@ function printStrOfChar {
     printf "$char""%.0s" $(seq 1 $length) #support whitespace char
   fi
 }
+
 function printLineOfChar {
   printStrOfChar $1 $2
   printf "\n"
 }
+
 function printCenter {
   length=$1
   string=$2
@@ -53,6 +63,7 @@ function printCenter {
   printf "$lineCommand"
   printLineOfChar $end ' '
 }
+
 function trimSpecialChars {
   #echo Calling ${FUNCNAME[0]}...
   local __result__=$1
@@ -60,32 +71,17 @@ function trimSpecialChars {
 
   # Remove UTF-8 BOM bytes
   str=$(iconv --from-code=UTF-8 -c <<< $str)
-  # echo $str
-  # readarray -t arr <<< "$str"
-  # declare -p arr
-  # echo
 
   # Escape new lines...
   str="${str//$'\n'/\{nl\}}"
-  # echo $str
-  # echo
 
   # Remove control chars...
-  #tr -d '\r'
   str=$(tr -d [:cntrl:] <<< "$str")
-  # echo $str
-  # readarray -t arr <<< "$str"
-  # declare -p arr
-  # echo
 
   # Index of alnum-substring
   local s="${str%%[[:alnum:]]*}"
   local index=${#s}
-  #echo $s : $index
   str=${str:index} # make substring starting from first alnum-char
-  # readarray -t arr <<< $str
-  # declare -p arr
-  # echo
 
   # Last index of alnum-substring
   s="${str##*[[:alnum:]]}" # after last index
@@ -96,8 +92,7 @@ function trimSpecialChars {
   str="${str//\{nl\}/$'\n'}"
 
   # return $str
-  if [[ "$__result__" ]]
-  then
+  if [[ "$__result__" ]]; then
     eval $__result__="'$str'"
   else
     echo "$str"
@@ -114,7 +109,7 @@ do
   time=$(date +%T)
   now=$(date +%s)
   seconds=$(($now-$start))
-  timestamp $seconds
+  timestamp _timestamp_ $seconds
  
   # Print out all lines for analysis
   lineCommand=$(echo $command | tr '[:lower:]' '[:upper:]')
