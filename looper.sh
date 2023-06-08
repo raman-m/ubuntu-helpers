@@ -152,7 +152,6 @@ do
   #eval "$command"
   output=$(eval "$command")
   # echo "$output"
-  # echo
 
   trimSpecialChars content "$output"
 
