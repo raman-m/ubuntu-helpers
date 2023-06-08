@@ -159,7 +159,6 @@ do
   # echo Encode whitespaces...
   # content="${content// /\{whitespace\}}"
   # echo $content
-  # echo
 
   readarray -t lines <<< "$content"
 
