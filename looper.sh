@@ -101,9 +101,15 @@ function trimSpecialChars {
 
 start=$(date +%s)
 started=$(date +%T)
-command="nordvpn status"
+command=$1 # read the command from 1st argument
+looping=true
+if [ -z "$command" ]
+then
+  echo Command is not defined: "\$command is empty"
+  looping=false
+fi
 
-while true
+while $looping
 do
   today=$(date +%c)
   time=$(date +%T)
@@ -148,26 +154,20 @@ do
   echo
   # End of Header rendering
 
-  #nordvpn status
-  #eval "$command"
+  # Execute the command, save output
   output=$(eval "$command")
-  # echo "$output"
 
+  # Remove bad characters
   trimSpecialChars content "$output"
 
-  # echo Encode whitespaces...
-  # content="${content// /\{whitespace\}}"
-
+  # Print content lines from array
   readarray -t lines <<< "$content"
-
   for i in "${!lines[@]}"; do
     line=${lines[$i]}
-    length=${#line}
-    # if ((maxLen < length)); then
-    #   maxLen=$length
-    # fi
-    echo $i : $length : $line
+    #length=${#line}
+    echo $line
   done
+  # printArray "${lines[@]}"
 
   # Footer rendering
   echo
